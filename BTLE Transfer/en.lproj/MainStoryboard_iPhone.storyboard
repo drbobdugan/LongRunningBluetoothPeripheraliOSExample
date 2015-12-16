@@ -3,6 +3,7 @@
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9051"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
     </dependencies>
     <scenes>
         <!--Bluetooth Central Peripheral Mode-->
@@ -17,7 +18,7 @@
                         <rect key="frame" x="0.0" y="0.0" width="320" height="480"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <subviews>
-                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" ambiguous="YES" misplaced="YES" text="Here is a bunch of sample text.  Hold another device close to see the transfer happen." textAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="ahP-qh-y5g">
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" text="Here is a bunch of sample text.  Hold another device close to see the transfer happen." textAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="ahP-qh-y5g">
                                 <rect key="frame" x="20" y="99" width="280" height="172"/>
                                 <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                                 <constraints>
@@ -28,6 +29,11 @@
                             </textView>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="ahP-qh-y5g" firstAttribute="centerX" secondItem="3" secondAttribute="centerX" id="XDg-P5-jy7"/>
+                            <constraint firstItem="ahP-qh-y5g" firstAttribute="top" secondItem="dfO-ac-wfY" secondAttribute="bottom" constant="35" id="qD9-Cr-kj2"/>
+                            <constraint firstItem="ahP-qh-y5g" firstAttribute="leading" secondItem="3" secondAttribute="leadingMargin" constant="4" id="u4G-ki-eAe"/>
+                        </constraints>
                     </view>
                     <navigationItem key="navigationItem" title="Bluetooth Central Peripheral Mode" id="go5-FE-P7r"/>
                 </viewController>

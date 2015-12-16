@@ -61,10 +61,12 @@
      NSLog(@"%s: launchOptions:%@",__PRETTY_FUNCTION__,launchOptions);
     
     // Start up the CBPeripheralManager
-   // _peripheralManager = [[CBPeripheralManager alloc] initWithDelegate: self queue:nil options:@{ CBCentralManagerOptionRestoreIdentifierKey:@"peripheralManagerIdentifier" }];
+    _peripheralManager = [[CBPeripheralManager alloc] initWithDelegate: self queue:nil options:@{ CBCentralManagerOptionRestoreIdentifierKey:@"peripheralManagerIdentifier" }];
+    
+    [BackgroundTimeRemainingUtility NSLog];
    
     // ORIGINAL: OK
-     _peripheralManager = [[CBPeripheralManager alloc] initWithDelegate:self queue:nil];
+    //_peripheralManager = [[CBPeripheralManager alloc] initWithDelegate:self queue:nil];
    
     
     
@@ -116,6 +118,7 @@
     
     // We're in CBPeripheralManagerStatePoweredOn state...
     NSLog(@"self.peripheralManager powered on.");
+    [BackgroundTimeRemainingUtility NSLog];
     
     // ... so build our service.
     
@@ -144,22 +147,23 @@
                                                                     permissions:CBAttributePermissionsReadable];
     
     // Then the service
-    CBMutableService *transferService = [[CBMutableService alloc] initWithType:[CBUUID UUIDWithString:TRANSFER_SERVICE_UUID]
+    _transferService = [[CBMutableService alloc] initWithType:[CBUUID UUIDWithString:TRANSFER_SERVICE_UUID]
                                                                        primary:YES];
     
     // Add the characteristic to the service
-    transferService.characteristics = @[self.transferCharacteristic];
+    _transferService.characteristics = @[self.transferCharacteristic];
     
     // And add it to the peripheral manager
-    [self.peripheralManager addService:transferService];
+    [self.peripheralManager addService:_transferService];
     
-     
     // Start advertising
-    [_peripheralManager stopAdvertising];
-    //[_peripheralManager startAdvertising:@{CBAdvertisementDataServiceUUIDsKey : @[_transferService.UUID] }];
-    [self.peripheralManager startAdvertising:@{ CBAdvertisementDataServiceUUIDsKey : @[[CBUUID UUIDWithString:TRANSFER_SERVICE_UUID]] }];
-
-
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        [_peripheralManager stopAdvertising];
+        [_peripheralManager startAdvertising:@{CBAdvertisementDataServiceUUIDsKey : @[_transferService.UUID] }];
+        //[self.peripheralManager startAdvertising:@{ CBAdvertisementDataServiceUUIDsKey : @[[CBUUID UUIDWithString:TRANSFER_SERVICE_UUID]] }];
+        NSLog(@"%s: started advertising",__PRETTY_FUNCTION__);
+    });
+ 
     
     NSLog(@"serviceUUID: %@ characteristicUUID: %@",_transferService.UUID,_transferCharacteristic.UUID);
 }
@@ -188,33 +192,38 @@
  */
 - (void)peripheralManager:(CBPeripheralManager *)peripheral central:(CBCentral *)central didUnsubscribeFromCharacteristic:(CBCharacteristic *)characteristic
 {
-    NSLog(@"%s: central unsubscribed from characteristic",__PRETTY_FUNCTION__);
+    NSLog(@"%s: central unsubscribed from characteristic (s)",__PRETTY_FUNCTION__);
+    [BackgroundTimeRemainingUtility NSLog];
 }
 
 - (void)peripheralManager:(CBPeripheralManager *)peripheral didAddService:(CBService *)service error:(NSError *)error
 {
     NSLog(@"%s: service:%@ error:%@ ",__PRETTY_FUNCTION__,service,error);
+    [BackgroundTimeRemainingUtility NSLog];
 }
 
 - (void)peripheralManagerDidStartAdvertising:(CBPeripheralManager *)peripheral error:(NSError *)error
 {
     NSLog(@"%s: peripheral:%@ error:%@ ",__PRETTY_FUNCTION__,peripheral,error);
+    [BackgroundTimeRemainingUtility NSLog];
 }
 
 - (void)peripheralManager:(CBPeripheralManager *)peripheral didReceiveReadRequest:(CBATTRequest *)request
 {
     NSLog(@"%s: peripheral:%@ request:%@ ",__PRETTY_FUNCTION__,peripheral,request);
+    [BackgroundTimeRemainingUtility NSLog];
 }
 
 - (void)peripheralManager:(CBPeripheralManager *)peripheral didReceiveWriteRequests:(NSArray *)requests
 {
     NSLog(@"%s: peripheral:%@ request:%@ ",__PRETTY_FUNCTION__,peripheral,requests);
+    [BackgroundTimeRemainingUtility NSLog];
 }
 
 - (void)peripheralManager:(CBPeripheralManager *)peripheral willRestoreState:(NSDictionary *)dict
 {
     NSLog(@"%s: peripheral:%@ request:%@ ",__PRETTY_FUNCTION__,peripheral,dict);
-
+    [BackgroundTimeRemainingUtility NSLog];
 }
 
 /** Sends the next amount of data to the connected central
@@ -316,6 +325,7 @@
 - (void)peripheralManagerIsReadyToUpdateSubscribers:(CBPeripheralManager *)peripheral
 {
     NSLog(@"%s:",__PRETTY_FUNCTION__);
+    [BackgroundTimeRemainingUtility NSLog];
     
     // Start sending again
     [self sendData];

@@ -25,8 +25,6 @@
 		B9F9163315D5806500B3B398 /* MainStoryboard_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B9F9163115D5806500B3B398 /* MainStoryboard_iPhone.storyboard */; };
 		B9F9163615D5806500B3B398 /* MainStoryboard_iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B9F9163415D5806500B3B398 /* MainStoryboard_iPad.storyboard */; };
 		B9F9163915D5806500B3B398 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B9F9163815D5806500B3B398 /* ViewController.m */; };
-		B9F9164115D5808200B3B398 /* BTLECentralViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B9F9164015D5808200B3B398 /* BTLECentralViewController.m */; };
-		B9F9164415D5808F00B3B398 /* BTLEPeripheralViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B9F9164315D5808F00B3B398 /* BTLEPeripheralViewController.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -56,10 +54,6 @@
 		B9F9163515D5806500B3B398 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard_iPad.storyboard; sourceTree = "<group>"; };
 		B9F9163715D5806500B3B398 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
 		B9F9163815D5806500B3B398 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
-		B9F9163F15D5808200B3B398 /* BTLECentralViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTLECentralViewController.h; sourceTree = "<group>"; };
-		B9F9164015D5808200B3B398 /* BTLECentralViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTLECentralViewController.m; sourceTree = "<group>"; };
-		B9F9164215D5808F00B3B398 /* BTLEPeripheralViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BTLEPeripheralViewController.h; sourceTree = "<group>"; };
-		B9F9164315D5808F00B3B398 /* BTLEPeripheralViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BTLEPeripheralViewController.m; sourceTree = "<group>"; };
 		B9F9164715D583E500B3B398 /* TransferService.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TransferService.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -115,10 +109,6 @@
 				B9F9163415D5806500B3B398 /* MainStoryboard_iPad.storyboard */,
 				B9F9163715D5806500B3B398 /* ViewController.h */,
 				B9F9163815D5806500B3B398 /* ViewController.m */,
-				B9F9163F15D5808200B3B398 /* BTLECentralViewController.h */,
-				B9F9164015D5808200B3B398 /* BTLECentralViewController.m */,
-				B9F9164215D5808F00B3B398 /* BTLEPeripheralViewController.h */,
-				B9F9164315D5808F00B3B398 /* BTLEPeripheralViewController.m */,
 				B9F9164715D583E500B3B398 /* TransferService.h */,
 				28A82BB61C18CE9600292F4F /* BackgroundTimeRemainingUtility.h */,
 				28A82BB71C18CEA300292F4F /* BackgroundTimeRemainingUtility.m */,
@@ -231,8 +221,6 @@
 				B9F9162615D5806400B3B398 /* main.m in Sources */,
 				B9F9162A15D5806400B3B398 /* AppDelegate.m in Sources */,
 				B9F9163915D5806500B3B398 /* ViewController.m in Sources */,
-				B9F9164115D5808200B3B398 /* BTLECentralViewController.m in Sources */,
-				B9F9164415D5808F00B3B398 /* BTLEPeripheralViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -326,7 +314,8 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "BTLE Transfer/BTLE Transfer-Prefix.pch";
 				INFOPLIST_FILE = "$(SRCROOT)/BTLE Transfer/BTLE Transfer-Info.plist";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.apple.${PRODUCT_NAME:rfc1034identifier}";
+				IPHONEOS_DEPLOYMENT_TARGET = 8.4;
+				PRODUCT_BUNDLE_IDENTIFIER = edu.stonehill.BTLETransfer;
 				PRODUCT_NAME = "BTLE Transfer";
 				PROVISIONING_PROFILE = "";
 				SDKROOT = iphoneos;
@@ -343,7 +332,8 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "BTLE Transfer/BTLE Transfer-Prefix.pch";
 				INFOPLIST_FILE = "$(SRCROOT)/BTLE Transfer/BTLE Transfer-Info.plist";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.apple.${PRODUCT_NAME:rfc1034identifier}";
+				IPHONEOS_DEPLOYMENT_TARGET = 8.4;
+				PRODUCT_BUNDLE_IDENTIFIER = edu.stonehill.BTLETransfer;
 				PRODUCT_NAME = "BTLE Transfer";
 				PROVISIONING_PROFILE = "";
 				SDKROOT = iphoneos;

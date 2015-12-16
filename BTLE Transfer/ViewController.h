@@ -50,9 +50,6 @@
  */
 
 #import <UIKit/UIKit.h>
-#import <CoreBluetooth/CoreBluetooth.h>
-#import "TransferService.h"
-#import "BackgroundTimeRemainingUtility.h"
 
 @interface ViewController : UIViewController
 

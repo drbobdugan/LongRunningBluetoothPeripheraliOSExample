@@ -53,10 +53,6 @@
 
 @interface ViewController () <UITextViewDelegate>
 @property (strong, nonatomic) IBOutlet UITextView       *textView;
-@property (strong, nonatomic) CBPeripheralManager       *peripheralManager;
-@property (strong, nonatomic) CBMutableCharacteristic   *transferCharacteristic;
-@property (strong, nonatomic) NSData                    *dataToSend;
-@property (nonatomic, readwrite) NSInteger              sendDataIndex;
 @end
 
 @implementation ViewController
