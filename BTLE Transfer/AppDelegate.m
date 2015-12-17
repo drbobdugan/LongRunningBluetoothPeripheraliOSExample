@@ -1,5 +1,20 @@
 /*
  
+ This code is a modified version of the BTLE Transfer iOS app available for
+ download at:
+ 
+    https://developer.apple.com/library/ios/samplecode/BTLE_Transfer/Introduction/Intro.html
+ 
+ The modifications are:
+ - removed Bluetooth Central Manager code
+ - removed all UI code with exception of first screen
+ - moved all CBPeripheral to AppDelegate class
+ - reworked CBPeripheral code so that it can operate as a background task
+ 
+ Bob Dugan December 2015
+ 
+ ----------------------- Begin Apple Comments -------------------------
+ 
  File: AppDelegate.m
  
  Abstract: App Level Code
@@ -58,123 +73,138 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-     NSLog(@"%s: launchOptions:%@",__PRETTY_FUNCTION__,launchOptions);
+    
+    // If the launchOptions are NULL, then the app is started as a foreground task otherwise
+    // the app is started as a background task.
+    NSLog(@"%s: launchOptions:%@ %@",__PRETTY_FUNCTION__,launchOptions,(launchOptions==nil)?@"FOREGROUND TASK":@"BACKGROUND TASK");
+
     
     // Start up the CBPeripheralManager
+    //
+    // This version allows the SERVICE UUID for the BTLE service supported by CBPeripheralManager
+    // to move to an overflow buffer on the iOS device... this overflow buffer can be queried
+    // EVEN WHEN THE APP IS NOT RUNNING so that it can be started as a background task on the
+    // iOS device.
+    //
+    // OLD VERSION:
+    //   _peripheralManager = [[CBPeripheralManager alloc] initWithDelegate:self queue:nil];
+    //
     _peripheralManager = [[CBPeripheralManager alloc] initWithDelegate: self queue:nil options:@{ CBCentralManagerOptionRestoreIdentifierKey:@"peripheralManagerIdentifier" }];
     
     [BackgroundTimeRemainingUtility NSLog];
    
-    // ORIGINAL: OK
-    //_peripheralManager = [[CBPeripheralManager alloc] initWithDelegate:self queue:nil];
-   
-    
-    
     return YES;
 }
 							
+//
+// Delegate for UIApplicationDelegate
+//
+- (void)application:(UIApplication *)application handleEventsForBackgroundURLSession:(NSString *)identifier
+  completionHandler:(void (^)()) completionHandler
+{
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+}
+
+//
+// Delegate for UIApplicationDelegate
+//
+-(void)application:(UIApplication *)application performFetchWithCompletionHandler:(void (^)(UIBackgroundFetchResult))completionHandler
+{
+    NSLog(@"%s", __PRETTY_FUNCTION__);
+}
+
+//
+// Delegate for UIApplicationDelegate
+//
 - (void)applicationWillResignActive:(UIApplication *)application
 {
-    // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
-    // Use this method to pause ongoing tasks, disable timers, and throttle down OpenGL ES frame rates. Games should use this method to pause the game.
+    NSLog(@"%s", __PRETTY_FUNCTION__);
 }
 
+//
+// Delegate for UIApplicationDelegate
+//
 - (void)applicationDidEnterBackground:(UIApplication *)application
 {
-    // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later. 
-    // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
+    NSLog(@"%s", __PRETTY_FUNCTION__);
 }
 
+//
+// Delegate for UIApplicationDelegate
+//
 - (void)applicationWillEnterForeground:(UIApplication *)application
 {
-    // Called as part of the transition from the background to the inactive state; here you can undo many of the changes made on entering the background.
+    NSLog(@"%s", __PRETTY_FUNCTION__);
 }
 
+//
+// Delegate for UIApplicationDelegate
+//
 - (void)applicationDidBecomeActive:(UIApplication *)application
 {
-    // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+    NSLog(@"%s", __PRETTY_FUNCTION__);
 }
 
+//
+// Delegate for UIApplicationDelegate
+//
 - (void)applicationWillTerminate:(UIApplication *)application
 {
-    // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
+    NSLog(@"%s", __PRETTY_FUNCTION__);
 }
-
 
 #pragma mark - Peripheral Methods
 
-
-
-/** Required protocol method.  A full app should take care of all the possible states,
- *  but we're just waiting for  to know when the CBPeripheralManager is ready
- */
+//
+// Delegate for CBPeripheralDelegate
+//
 - (void)peripheralManagerDidUpdateState:(CBPeripheralManager *)peripheral
 {
-    // Opt out from any other state
+    // CBPeripheralManagerState... state other than CBPeripheralManagerStatePoweredOn
     if (peripheral.state != CBPeripheralManagerStatePoweredOn) {
-        NSLog(@"peripheralManager state is now: %li",(long)peripheral.state);
-        return;
+        NSLog(@"%s: peripheralManager state is now: %li",__PRETTY_FUNCTION__,(long)peripheral.state);
     }
-    
-    // We're in CBPeripheralManagerStatePoweredOn state...
-    NSLog(@"self.peripheralManager powered on.");
-    [BackgroundTimeRemainingUtility NSLog];
-    
-    // ... so build our service.
-    
-    // MODIFIED
-    /*
-    // Start with the CBMutableCharacteristic
-    self.transferCharacteristic = [[CBMutableCharacteristic alloc] initWithType:[CBUUID UUIDWithString:TRANSFER_CHARACTERISTIC_UUID]
+    // CBPeripheralManagerStatePoweredOn state...
+    else {
+        
+        NSLog(@"%s: peripheralManager powered on.",__PRETTY_FUNCTION__);
+        [BackgroundTimeRemainingUtility NSLog];
+        
+        // Start with the CBMutableCharacteristic
+        _transferCharacteristic = [[CBMutableCharacteristic alloc] initWithType:[CBUUID UUIDWithString:TRANSFER_CHARACTERISTIC_UUID]
                                                                      properties:CBCharacteristicPropertyNotify
                                                                           value:nil
                                                                     permissions:CBAttributePermissionsReadable];
-    
-    // Then the service
-    _transferService = [[CBMutableService alloc] initWithType:[CBUUID UUIDWithString:TRANSFER_SERVICE_UUID] primary:NO];
-    
-    // Add the characteristic to the service
-    _transferService.characteristics = @[_transferCharacteristic];
-    
-    // And add it to the peripheral manager
-    [self.peripheralManager addService:_transferService];
-    */
-    
-    // Start with the CBMutableCharacteristic
-    self.transferCharacteristic = [[CBMutableCharacteristic alloc] initWithType:[CBUUID UUIDWithString:TRANSFER_CHARACTERISTIC_UUID]
-                                                                     properties:CBCharacteristicPropertyNotify
-                                                                          value:nil
-                                                                    permissions:CBAttributePermissionsReadable];
-    
-    // Then the service
-    _transferService = [[CBMutableService alloc] initWithType:[CBUUID UUIDWithString:TRANSFER_SERVICE_UUID]
-                                                                       primary:YES];
-    
-    // Add the characteristic to the service
-    _transferService.characteristics = @[self.transferCharacteristic];
-    
-    // And add it to the peripheral manager
-    [self.peripheralManager addService:_transferService];
-    
-    // Start advertising
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-        [_peripheralManager stopAdvertising];
-        [_peripheralManager startAdvertising:@{CBAdvertisementDataServiceUUIDsKey : @[_transferService.UUID] }];
-        //[self.peripheralManager startAdvertising:@{ CBAdvertisementDataServiceUUIDsKey : @[[CBUUID UUIDWithString:TRANSFER_SERVICE_UUID]] }];
-        NSLog(@"%s: started advertising",__PRETTY_FUNCTION__);
-    });
- 
-    
-    NSLog(@"serviceUUID: %@ characteristicUUID: %@",_transferService.UUID,_transferCharacteristic.UUID);
+        
+        // Then the service
+        _transferService = [[CBMutableService alloc] initWithType:[CBUUID UUIDWithString:TRANSFER_SERVICE_UUID] primary:YES];
+        
+        // Add the characteristic to the service
+        _transferService.characteristics = @[_transferCharacteristic];
+        
+        // And add it to the peripheral manager
+        [_peripheralManager addService:_transferService];
+        
+        // Start advertising using a timed thread... this won't work without a timer because you must have time to for
+        // the peripheral manager to add the service.
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+            [_peripheralManager stopAdvertising];
+            [_peripheralManager startAdvertising:@{CBAdvertisementDataServiceUUIDsKey : @[_transferService.UUID] }];
+            NSLog(@"%s: started advertising with ServiceUUID: %@ and CharacteristicUUID: %@",__PRETTY_FUNCTION__,_transferService.UUID,_transferCharacteristic.UUID);
+        });
+    }
 }
 
 
-/** Catch when someone subscribes to our characteristic, then start sending them data
- */
+//
+// Delegate for CBPeripheralDelegate
+//
+// Start sending data once we've got a subscriber to the characteristic
+//
 - (void)peripheralManager:(CBPeripheralManager *)peripheral central:(CBCentral *)central didSubscribeToCharacteristic:(CBCharacteristic *)characteristic
 {
     
-    NSLog(@"Central subscribed to characteristic: localkey: %@ dataserviceUUIDs: %@ datasolicitedserviceuuidskey: %@",CBAdvertisementDataLocalNameKey,CBAdvertisementDataServiceUUIDsKey,CBAdvertisementDataSolicitedServiceUUIDsKey);
+    NSLog(@"%s: central subscribed to characteristic: localkey: %@ dataserviceUUIDs: %@ datasolicitedserviceuuidskey: %@",__PRETTY_FUNCTION__,CBAdvertisementDataLocalNameKey,CBAdvertisementDataServiceUUIDsKey,CBAdvertisementDataSolicitedServiceUUIDsKey);
     [BackgroundTimeRemainingUtility NSLog];
     
     // Get the data
@@ -187,141 +217,9 @@
     [self sendData];
 }
 
-
-/** Recognise when the central unsubscribes
- */
-- (void)peripheralManager:(CBPeripheralManager *)peripheral central:(CBCentral *)central didUnsubscribeFromCharacteristic:(CBCharacteristic *)characteristic
-{
-    NSLog(@"%s: central unsubscribed from characteristic (s)",__PRETTY_FUNCTION__);
-    [BackgroundTimeRemainingUtility NSLog];
-}
-
-- (void)peripheralManager:(CBPeripheralManager *)peripheral didAddService:(CBService *)service error:(NSError *)error
-{
-    NSLog(@"%s: service:%@ error:%@ ",__PRETTY_FUNCTION__,service,error);
-    [BackgroundTimeRemainingUtility NSLog];
-}
-
-- (void)peripheralManagerDidStartAdvertising:(CBPeripheralManager *)peripheral error:(NSError *)error
-{
-    NSLog(@"%s: peripheral:%@ error:%@ ",__PRETTY_FUNCTION__,peripheral,error);
-    [BackgroundTimeRemainingUtility NSLog];
-}
-
-- (void)peripheralManager:(CBPeripheralManager *)peripheral didReceiveReadRequest:(CBATTRequest *)request
-{
-    NSLog(@"%s: peripheral:%@ request:%@ ",__PRETTY_FUNCTION__,peripheral,request);
-    [BackgroundTimeRemainingUtility NSLog];
-}
-
-- (void)peripheralManager:(CBPeripheralManager *)peripheral didReceiveWriteRequests:(NSArray *)requests
-{
-    NSLog(@"%s: peripheral:%@ request:%@ ",__PRETTY_FUNCTION__,peripheral,requests);
-    [BackgroundTimeRemainingUtility NSLog];
-}
-
-- (void)peripheralManager:(CBPeripheralManager *)peripheral willRestoreState:(NSDictionary *)dict
-{
-    NSLog(@"%s: peripheral:%@ request:%@ ",__PRETTY_FUNCTION__,peripheral,dict);
-    [BackgroundTimeRemainingUtility NSLog];
-}
-
-/** Sends the next amount of data to the connected central
- */
-- (void)sendData
-{
-    // First up, check if we're meant to be sending an EOM
-    static BOOL sendingEOM = NO;
-    
-    NSLog(@"%s:",__PRETTY_FUNCTION__);
-    [BackgroundTimeRemainingUtility NSLog];
-    
-    if (sendingEOM) {
-        
-        // send it
-        BOOL didSend = [self.peripheralManager updateValue:[@"EOM" dataUsingEncoding:NSUTF8StringEncoding] forCharacteristic:self.transferCharacteristic onSubscribedCentrals:nil];
-        
-        // Did it send?
-        if (didSend) {
-            
-            // It did, so mark it as sent
-            sendingEOM = NO;
-            
-            NSLog(@"Sent: EOM");
-        }
-        
-        // It didn't send, so we'll exit and wait for peripheralManagerIsReadyToUpdateSubscribers to call sendData again
-        return;
-    }
-    
-    // We're not sending an EOM, so we're sending data
-    
-    // Is there any left to send?
-    
-    if (self.sendDataIndex >= self.dataToSend.length) {
-        
-        // No data left.  Do nothing
-        return;
-    }
-    
-    // There's data left, so send until the callback fails, or we're done.
-    
-    BOOL didSend = YES;
-    
-    while (didSend) {
-        
-        // Make the next chunk
-        
-        // Work out how big it should be
-        NSInteger amountToSend = self.dataToSend.length - self.sendDataIndex;
-        
-        // Can't be longer than 20 bytes
-        if (amountToSend > NOTIFY_MTU) amountToSend = NOTIFY_MTU;
-        
-        // Copy out the data we want
-        NSData *chunk = [NSData dataWithBytes:self.dataToSend.bytes+self.sendDataIndex length:amountToSend];
-        
-        // Send it
-        didSend = [self.peripheralManager updateValue:chunk forCharacteristic:self.transferCharacteristic onSubscribedCentrals:nil];
-        
-        // If it didn't work, drop out and wait for the callback
-        if (!didSend) {
-            return;
-        }
-        
-        NSString *stringFromData = [[NSString alloc] initWithData:chunk encoding:NSUTF8StringEncoding];
-        NSLog(@"Sent: %@", stringFromData);
-        
-        // It did send, so update our index
-        self.sendDataIndex += amountToSend;
-        
-        // Was it the last one?
-        if (self.sendDataIndex >= self.dataToSend.length) {
-            
-            // It was - send an EOM
-            
-            // Set this so if the send fails, we'll send it next time
-            sendingEOM = YES;
-            
-            // Send it
-            BOOL eomSent = [self.peripheralManager updateValue:[@"EOM" dataUsingEncoding:NSUTF8StringEncoding] forCharacteristic:self.transferCharacteristic onSubscribedCentrals:nil];
-            
-            if (eomSent) {
-                // It sent, we're all done
-                sendingEOM = NO;
-                
-                NSLog(@"Sent: EOM");
-            }
-            
-            return;
-        }
-    }
-}
-
-
-/** This callback comes in when the PeripheralManager is ready to send the next chunk of data.
- *  This is to ensure that packets will arrive in the order they are sent
- */
+//
+// Delegate for CBPeripheralDelegate
+//
 - (void)peripheralManagerIsReadyToUpdateSubscribers:(CBPeripheralManager *)peripheral
 {
     NSLog(@"%s:",__PRETTY_FUNCTION__);
@@ -331,4 +229,147 @@
     [self sendData];
 }
 
+//
+// Delegate for CBPeripheralDelegate
+//
+- (void)peripheralManager:(CBPeripheralManager *)peripheral central:(CBCentral *)central didUnsubscribeFromCharacteristic:(CBCharacteristic *)characteristic
+{
+    NSLog(@"%s: central unsubscribed from characteristic (s)",__PRETTY_FUNCTION__);
+    [BackgroundTimeRemainingUtility NSLog];
+}
+
+//
+// Delegate for CBPeripheralDelegate
+//
+- (void)peripheralManager:(CBPeripheralManager *)peripheral didAddService:(CBService *)service error:(NSError *)error
+{
+    NSLog(@"%s: service:%@ error:%@ ",__PRETTY_FUNCTION__,service,error);
+    [BackgroundTimeRemainingUtility NSLog];
+}
+
+//
+// Delegate for CBPeripheralDelegate
+//
+- (void)peripheralManagerDidStartAdvertising:(CBPeripheralManager *)peripheral error:(NSError *)error
+{
+    NSLog(@"%s: peripheral:%@ error:%@ ",__PRETTY_FUNCTION__,peripheral,error);
+    [BackgroundTimeRemainingUtility NSLog];
+}
+
+//
+// Delegate for CBPeripheralDelegate
+//
+- (void)peripheralManager:(CBPeripheralManager *)peripheral didReceiveReadRequest:(CBATTRequest *)request
+{
+    NSLog(@"%s: peripheral:%@ request:%@ ",__PRETTY_FUNCTION__,peripheral,request);
+    [BackgroundTimeRemainingUtility NSLog];
+}
+
+//
+// Delegate for CBPeripheralDelegate
+//
+- (void)peripheralManager:(CBPeripheralManager *)peripheral didReceiveWriteRequests:(NSArray *)requests
+{
+    NSLog(@"%s: peripheral:%@ request:%@ ",__PRETTY_FUNCTION__,peripheral,requests);
+    [BackgroundTimeRemainingUtility NSLog];
+}
+
+//
+// Delegate for CBPeripheralDelegate
+//
+- (void)peripheralManager:(CBPeripheralManager *)peripheral willRestoreState:(NSDictionary *)dict
+{
+    NSLog(@"%s: peripheral:%@ request:%@ ",__PRETTY_FUNCTION__,peripheral,dict);
+    [BackgroundTimeRemainingUtility NSLog];
+}
+
+//
+// Sends the next amount of data to the connected central
+//
+- (void)sendData
+{
+    // First up, check if we're meant to be sending an EOM
+    static BOOL sendingEOM = NO;
+    
+    NSLog(@"%s:",__PRETTY_FUNCTION__);
+    [BackgroundTimeRemainingUtility NSLog];
+    
+    // Special case if we're done sending the message
+    if (sendingEOM) {
+        
+        // send it
+        BOOL didSend = [self.peripheralManager updateValue:[@"EOM" dataUsingEncoding:NSUTF8StringEncoding] forCharacteristic:self.transferCharacteristic onSubscribedCentrals:nil];
+        
+        // Did it send?
+        if (didSend) {
+            // It did, so mark it as sent
+            sendingEOM = NO;
+            NSLog(@"%s: send EOM succeeded.",__PRETTY_FUNCTION__);
+        }
+        else {
+            NSLog(@"%s: send EOM failed.. will try again.",__PRETTY_FUNCTION__);
+        }
+    }
+    // We're not sending an EOM, so we're sending data
+    else {
+        
+        // Is there any left to send?
+        if (self.sendDataIndex >= self.dataToSend.length) {
+            
+            // No data left.  Do nothing
+            return;
+        }
+        
+        // There's data left, so send until the callback fails, or we're done.
+        BOOL didSend = YES;
+        while (didSend) {
+            
+            // Make the next chunk
+            
+            // Work out how big it should be
+            NSInteger amountToSend = self.dataToSend.length - self.sendDataIndex;
+            
+            // Can't be longer than 20 bytes
+            if (amountToSend > NOTIFY_MTU) amountToSend = NOTIFY_MTU;
+            
+            // Copy out the data we want
+            NSData *chunk = [NSData dataWithBytes:self.dataToSend.bytes+self.sendDataIndex length:amountToSend];
+            
+            // Send it
+            didSend = [self.peripheralManager updateValue:chunk forCharacteristic:self.transferCharacteristic onSubscribedCentrals:nil];
+            
+            // If it didn't work, drop out and wait for the callback
+            if (!didSend) {
+                return;
+            }
+            
+            NSString *stringFromData = [[NSString alloc] initWithData:chunk encoding:NSUTF8StringEncoding];
+            NSLog(@"Sent: %@", stringFromData);
+            
+            // It did send, so update our index
+            self.sendDataIndex += amountToSend;
+            
+            // Was it the last one?
+            if (self.sendDataIndex >= self.dataToSend.length) {
+                
+                // It was - send an EOM
+                
+                // Set this so if the send fails, we'll send it next time
+                sendingEOM = YES;
+                
+                // Send it
+                BOOL eomSent = [self.peripheralManager updateValue:[@"EOM" dataUsingEncoding:NSUTF8StringEncoding] forCharacteristic:self.transferCharacteristic onSubscribedCentrals:nil];
+                
+                if (eomSent) {
+                    // It sent, we're all done
+                    sendingEOM = NO;
+                    
+                    NSLog(@"Sent: EOM");
+                }
+                
+                return;
+            }
+        }
+    }
+}
 @end
